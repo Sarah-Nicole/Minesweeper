@@ -4,27 +4,34 @@ using System.Windows.Forms;
 
 namespace Minesweeper
 {
-    public partial class FrmMinesweeper : Form
+    public partial class FrmMinesweeperMain : Form
     {
-        private Button[,] buttons = new Button[8, 8];
-
-        Panel disablePanel;
+        
 
         private Timer timer;
         private DateTime startTime;
 
         // noch dynamisch machen
-        int bombCount = 10;
-        int lifeCount = 3;
+        private GameConfig _config;
+        int lifeCount;
+        int boardSize;
 
-        string winMessage = "You won!";
-        string loseMessage = "You lost! :(, Want to try again?";
+        private Button[,] buttons; 
 
-        public FrmMinesweeper()
+
+        string winMessage = "You won! Want to try again?";
+        string loseMessage = "You lost! :( Want to try again?";
+
+        public FrmMinesweeperMain(GameConfig config)
         {
             InitializeComponent();
+            _config = config;
+            lifeCount = _config.LifeCount;
+            boardSize = _config.BoardSize;
+            TxtbLife.Text = _config.LifeCount.ToString();
+            StartPosition = FormStartPosition.CenterScreen;
+
             CreateGameBoard();
-            TxtbLife.Text = lifeCount.ToString();
             CreateTimer();
 
             PlaceBombs();
@@ -33,6 +40,8 @@ namespace Minesweeper
         #region Inizialisierung Komponenten
         public void CreateGameBoard()
         {
+            buttons = new Button[boardSize, boardSize];
+
             int newX = 32;
             int newY = 80;
             int offset = 5;
@@ -60,18 +69,6 @@ namespace Minesweeper
             }
         }
 
-        public void CreateDisablePanel()
-        {
-            disablePanel = new Panel()
-            {
-                Size = this.ClientSize,
-                Location = new Point(0, 0),
-                Visible = false,
-            };
-            Controls.Add(disablePanel);
-        }
-
-
         public void CreateTimer()
         {
             startTime = DateTime.Now;
@@ -96,14 +93,14 @@ namespace Minesweeper
         {
             Random rnd = new Random();
 
-            for (int i = 0; i < bombCount; i++)
+            for (int i = 0; i < _config.BombCount; i++)
             {
                 bool placedBomb = false;
 
                 while (!placedBomb)
                 {
-                    int x = rnd.Next(0, 8);
-                    int y = rnd.Next(0, 8);
+                    int x = rnd.Next(0, boardSize);
+                    int y = rnd.Next(0, boardSize);
 
                     if (!((ButtonInfo)buttons[x, y].Tag).HasBomb)
                     {
@@ -123,15 +120,14 @@ namespace Minesweeper
         private bool CheckIfWon()
         {
             // Check if all non-bomb buttons are disabled
-            int nonBombCount = buttons.GetLength(0) * buttons.GetLength(1) - bombCount;
+            int nonBombCount = buttons.GetLength(0) * buttons.GetLength(1) - _config.BombCount;
             int emptyFieldCount = 0;
 
             for (int y = 0; y <= buttons.GetUpperBound(1); y++)
             {
                 for (int x = 0; x <= buttons.GetUpperBound(0); x++)
                 {
-                    ButtonInfo info = (ButtonInfo)buttons[x, y].Tag;
-                    if (!info.HasBomb && !buttons[x, y].Enabled)
+                    if (!((ButtonInfo)buttons[x, y].Tag).HasBomb && !buttons[x, y].Enabled)
                     {
                         emptyFieldCount++;
                     }
@@ -148,9 +144,9 @@ namespace Minesweeper
             startTime = DateTime.Now;
             TxtbTimer.Text = "00:00:00";
 
-            //noch dynamisch machen und input-wert nehmen
-            lifeCount = 3;
-            TxtbLife.Text = lifeCount.ToString();
+            // Reset lifeCount
+            lifeCount = _config.LifeCount; 
+            TxtbLife.Text = _config.LifeCount.ToString();
 
             // Reset buttons
             for (int y = 0; y <= buttons.GetUpperBound(1); y++)
@@ -166,18 +162,6 @@ namespace Minesweeper
 
             PlaceBombs();
         }
-
-        public void DisableAll()
-        {
-
-            CreateDisablePanel();
-
-            // Panel darüber legen und dieses disablen. 
-            disablePanel.Visible = true;
-            disablePanel.Enabled = false;
-            // disablePanel.BringToFront();
-        }
-
 
         private int CountAdjurningBombs(int clickedButtonX, int clickedButtonY)
         {
@@ -206,9 +190,8 @@ namespace Minesweeper
         public void MyButtonHandler_Click(object sender, EventArgs e)
         {
             Button b = (Button)sender;
-            // Im Name ist die Position gemerkt. Anzeigen raus löschen
+            // Im Name ist die Position gemerkt. Anzeigen raus löschen für Produktion
             b.Text = $"{b.Name}";
-            // In Tag definieren ob Bombe oder nicht.
 
             // Eventuell bessere Lösung (in Tag speichern als Flag (isClicked))
             b.Enabled = false;
@@ -232,15 +215,11 @@ namespace Minesweeper
                 ((ButtonInfo)b.Tag).NumberOfAdjurningBombs = adjoiningBombs;
                 b.Text = adjoiningBombs.ToString();
             }
-                     
 
-
-            if (lifeCount == 0)
+            if(lifeCount == 0)
             {
-                // Disabled alles: nochmals überarbeiten.
-                //  DisableAll();
-
                 timer.Stop();
+
                 // Message Box noch in der Mitte der Applikation setzen. 
                 var result = MessageBox.Show(loseMessage, "Looser!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
 
@@ -251,32 +230,33 @@ namespace Minesweeper
                 else
                 {
                     // Programm schliessen / bzw dann zurück zur auswahl
-                    FrmMinesweeper.ActiveForm.Close();
+                    FrmMinesweeperMain.ActiveForm.Close();
                 }
             }
 
-            // muss noch überarbeitet werden:
             if (CheckIfWon())
             {
-                MessageBox.Show(winMessage, "Winner!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                var result = MessageBox.Show(winMessage, "Winner!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+               
+                if (result == DialogResult.Yes)
+                {
+                    StartNewGame();
+                }
+                else
+                {
+                    // Programm schliessen / bzw dann zurück zur auswahl
+                    FrmMinesweeperMain.ActiveForm.Close();
+                }
             }
-
         }
 
         private void BtnPlay_Click(object sender, EventArgs e)
         {
             StartNewGame();
             // 2te Option: Timer erst starten wenn auf Play gedrückt & alle Buttons im initialize disabled zuerst und erst hier enablen. 
-
         }
 
         #endregion
 
-        public class ButtonInfo
-        {
-            public bool HasBomb { get; set; }
-            public int NumberOfAdjurningBombs { get; set; }
-            //public bool WasClicked { get; set; }
-        }
     }
 }

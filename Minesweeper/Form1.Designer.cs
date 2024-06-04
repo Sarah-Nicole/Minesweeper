@@ -1,6 +1,6 @@
 ﻿namespace Minesweeper
 {
-    partial class FrmMinesweeper
+    partial class FrmMinesweeperMain
     {
         /// <summary>
         /// Erforderliche Designervariable.
