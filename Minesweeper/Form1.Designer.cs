@@ -35,9 +35,10 @@
             // 
             // TxtbTimer
             // 
+            this.TxtbTimer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.TxtbTimer.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F);
-            this.TxtbTimer.Location = new System.Drawing.Point(300, 11);
-            this.TxtbTimer.Margin = new System.Windows.Forms.Padding(2);
+            this.TxtbTimer.Location = new System.Drawing.Point(273, 22);
+            this.TxtbTimer.Margin = new System.Windows.Forms.Padding(10);
             this.TxtbTimer.Name = "TxtbTimer";
             this.TxtbTimer.ReadOnly = true;
             this.TxtbTimer.Size = new System.Drawing.Size(127, 30);
@@ -48,8 +49,8 @@
             // TxtbLife
             // 
             this.TxtbLife.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F);
-            this.TxtbLife.Location = new System.Drawing.Point(28, 11);
-            this.TxtbLife.Margin = new System.Windows.Forms.Padding(2);
+            this.TxtbLife.Location = new System.Drawing.Point(40, 22);
+            this.TxtbLife.Margin = new System.Windows.Forms.Padding(10);
             this.TxtbLife.Name = "TxtbLife";
             this.TxtbLife.ReadOnly = true;
             this.TxtbLife.Size = new System.Drawing.Size(127, 30);
@@ -58,9 +59,10 @@
             // 
             // BtnPlay
             // 
+            this.BtnPlay.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.BtnPlay.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F);
-            this.BtnPlay.Location = new System.Drawing.Point(194, 11);
-            this.BtnPlay.Margin = new System.Windows.Forms.Padding(2);
+            this.BtnPlay.Location = new System.Drawing.Point(192, 23);
+            this.BtnPlay.Margin = new System.Windows.Forms.Padding(10);
             this.BtnPlay.Name = "BtnPlay";
             this.BtnPlay.Size = new System.Drawing.Size(60, 28);
             this.BtnPlay.TabIndex = 5;
@@ -69,16 +71,19 @@
             this.BtnPlay.UseVisualStyleBackColor = true;
             this.BtnPlay.Click += new System.EventHandler(this.BtnPlay_Click);
             // 
-            // FrmMinesweeper
+            // FrmMinesweeperMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(450, 507);
             this.Controls.Add(this.TxtbTimer);
             this.Controls.Add(this.TxtbLife);
             this.Controls.Add(this.BtnPlay);
-            this.Margin = new System.Windows.Forms.Padding(2);
-            this.Name = "FrmMinesweeper";
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Name = "FrmMinesweeperMain";
+            this.Padding = new System.Windows.Forms.Padding(40, 42, 40, 42);
             this.Text = "Minesweeper";
             this.ResumeLayout(false);
             this.PerformLayout();

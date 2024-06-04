@@ -6,18 +6,14 @@ namespace Minesweeper
 {
     public partial class FrmMinesweeperMain : Form
     {
-        
-
         private Timer timer;
         private DateTime startTime;
 
-        // noch dynamisch machen
         private GameConfig _config;
         int lifeCount;
         int boardSize;
 
-        private Button[,] buttons; 
-
+        private Button[,] buttons;
 
         string winMessage = "You won! Want to try again?";
         string loseMessage = "You lost! :( Want to try again?";
@@ -28,13 +24,14 @@ namespace Minesweeper
             _config = config;
             lifeCount = _config.LifeCount;
             boardSize = _config.BoardSize;
-            TxtbLife.Text = _config.LifeCount.ToString();
+
             StartPosition = FormStartPosition.CenterScreen;
 
             CreateGameBoard();
             CreateTimer();
-
+            SetLifeCount();
             PlaceBombs();
+            SetAdjurningBombs();
         }
 
         #region Inizialisierung Komponenten
@@ -86,8 +83,14 @@ namespace Minesweeper
             TxtbTimer.Text = elapsedTime.ToString("hh\\:mm\\:ss");
         }
 
+        private void SetLifeCount()
+        {
+            TxtbLife.Text = lifeCount.ToString();
+        }
+
         #endregion
 
+        #region Methoden
 
         private void PlaceBombs()
         {
@@ -145,7 +148,7 @@ namespace Minesweeper
             TxtbTimer.Text = "00:00:00";
 
             // Reset lifeCount
-            lifeCount = _config.LifeCount; 
+            lifeCount = _config.LifeCount;
             TxtbLife.Text = _config.LifeCount.ToString();
 
             // Reset buttons
@@ -163,11 +166,22 @@ namespace Minesweeper
             PlaceBombs();
         }
 
+        private void SetAdjurningBombs()
+        {
+            foreach (Button button in buttons)
+            {
+                string[] nameParts = button.Name.Split(':');
+                int clickedButtonX = Convert.ToInt32(nameParts[0]);
+                int clickedButtonY = Convert.ToInt32(nameParts[1]);
+                ((ButtonInfo)button.Tag).NumberOfAdjurningBombs = CountAdjurningBombs(clickedButtonX, clickedButtonY);
+            }
+        }
+
         private int CountAdjurningBombs(int clickedButtonX, int clickedButtonY)
         {
             int bombCount = 0;
 
-            // Durch die Buttons iterieren inkl. Edges
+            // Mit Math.Max wird 0 genommen wenn clickedButtonY unter 0 ist - mit Math.Min das selbe einfach umgekehrt (damit nicht über die Grenzen)
             for (int y = Math.Max(clickedButtonY - 1, 0); y <= Math.Min(clickedButtonY + 1, buttons.GetUpperBound(1)); y++)
             {
                 for (int x = Math.Max(clickedButtonX - 1, 0); x <= Math.Min(clickedButtonX + 1, buttons.GetUpperBound(0)); x++)
@@ -185,6 +199,38 @@ namespace Minesweeper
             return bombCount;
         }
 
+        private void CountAdjurningZeros(Button b)
+        {
+            string[] nameParts = b.Name.Split(':');
+            int clickedButtonX = Convert.ToInt32(nameParts[0]);
+            int clickedButtonY = Convert.ToInt32(nameParts[1]);
+
+            RevealSurroundingZeros(clickedButtonX, clickedButtonY);
+            buttons[clickedButtonX, clickedButtonY].Enabled = false;
+            buttons[clickedButtonX, clickedButtonY].Text = ((ButtonInfo)buttons[clickedButtonX, clickedButtonY].Tag).NumberOfAdjurningBombs.ToString();
+        }
+
+        private void RevealSurroundingZeros(int x, int y)
+        {
+            for (int y2 = Math.Max(y - 1, 0); y2 <= Math.Min(y + 1, buttons.GetUpperBound(1)); y2++)
+            {
+                for (int x2 = Math.Max(x - 1, 0); x2 <= Math.Min(x + 1, buttons.GetUpperBound(0)); x2++)
+                {
+                    if (x2 != x || y2 != y) // Don't check the zero button itself
+                    {
+                        if (((ButtonInfo)buttons[x2, y2].Tag).NumberOfAdjurningBombs == 0 && buttons[x2, y2].Enabled)
+                        {
+                            buttons[x2, y2].Enabled = false;
+                            buttons[x2, y2].Text = ((ButtonInfo)buttons[x2, y2].Tag).NumberOfAdjurningBombs.ToString(); // Or set text to indicate an empty cell
+                            RevealSurroundingZeros(x2, y2);
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion
+
         #region EventHandler
 
         public void MyButtonHandler_Click(object sender, EventArgs e)
@@ -201,26 +247,22 @@ namespace Minesweeper
             {
                 // Sound einfügen 
                 lifeCount--;
-                TxtbLife.Text = lifeCount.ToString();
+                SetLifeCount();
             }
             else
             {
-                // Ev. CountAdjuringBombs gerade Wert zurück geben
-                string[] nameParts = b.Name.Split(':');
-                int clickedButtonX = Convert.ToInt32(nameParts[0]);
-                int clickedButtonY = Convert.ToInt32(nameParts[1]);
-                int adjoiningBombs = CountAdjurningBombs(clickedButtonX, clickedButtonY);
+                b.Text = ((ButtonInfo)b.Tag).NumberOfAdjurningBombs.ToString();
 
-                // Update ButtonInfo with adjoining bomb count
-                ((ButtonInfo)b.Tag).NumberOfAdjurningBombs = adjoiningBombs;
-                b.Text = adjoiningBombs.ToString();
+                if (((ButtonInfo)b.Tag).NumberOfAdjurningBombs == 0)
+                {
+                    CountAdjurningZeros(b);
+                }
             }
 
-            if(lifeCount == 0)
+            if (lifeCount == 0)
             {
                 timer.Stop();
 
-                // Message Box noch in der Mitte der Applikation setzen. 
                 var result = MessageBox.Show(loseMessage, "Looser!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
 
                 if (result == DialogResult.Yes)
@@ -229,7 +271,6 @@ namespace Minesweeper
                 }
                 else
                 {
-                    // Programm schliessen / bzw dann zurück zur auswahl
                     FrmMinesweeperMain.ActiveForm.Close();
                 }
             }
@@ -237,14 +278,13 @@ namespace Minesweeper
             if (CheckIfWon())
             {
                 var result = MessageBox.Show(winMessage, "Winner!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-               
+
                 if (result == DialogResult.Yes)
                 {
                     StartNewGame();
                 }
                 else
                 {
-                    // Programm schliessen / bzw dann zurück zur auswahl
                     FrmMinesweeperMain.ActiveForm.Close();
                 }
             }
@@ -253,7 +293,6 @@ namespace Minesweeper
         private void BtnPlay_Click(object sender, EventArgs e)
         {
             StartNewGame();
-            // 2te Option: Timer erst starten wenn auf Play gedrückt & alle Buttons im initialize disabled zuerst und erst hier enablen. 
         }
 
         #endregion

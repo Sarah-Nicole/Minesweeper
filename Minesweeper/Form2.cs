@@ -5,9 +5,6 @@ namespace Minesweeper
 {
     public partial class FrmMinesweeperStart : Form
     {
-       // int selectedLevel = 0;
-       // int boardSize = 8;
-
         private GameConfig config = new GameConfig();
 
         public FrmMinesweeperStart()
@@ -52,7 +49,7 @@ namespace Minesweeper
         {
             int remainder = TrkbSize.Value % TrkbSize.TickFrequency;
             int newValue = TrkbSize.Value - remainder;
-            if (remainder > (TrkbSize.TickFrequency / 2))
+            if (remainder > (TrkbSize.TickFrequency))
             {
                 newValue += TrkbSize.TickFrequency;
             }
@@ -68,16 +65,14 @@ namespace Minesweeper
         private void BtnPlayStart_Click(object sender, EventArgs e)
         {
             FrmMinesweeperMain mainForm = new FrmMinesweeperMain(config);
-            mainForm.FormClosed += OnMainFormClosed; 
+            mainForm.FormClosed += OnMainFormClosed;
             mainForm.Show();
             Hide();
         }
 
         private void OnMainFormClosed(object sender, FormClosedEventArgs e)
         {
-            Show(); 
+            Show();
         }
-
-        
     }
 }
