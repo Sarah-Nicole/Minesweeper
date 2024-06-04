@@ -199,6 +199,7 @@ namespace Minesweeper
             return bombCount;
         }
 
+        // ev. hinfällig oder namen noch ändern
         private void CountAdjurningZeros(Button b)
         {
             string[] nameParts = b.Name.Split(':');
@@ -216,12 +217,12 @@ namespace Minesweeper
             {
                 for (int x2 = Math.Max(x - 1, 0); x2 <= Math.Min(x + 1, buttons.GetUpperBound(0)); x2++)
                 {
-                    if (x2 != x || y2 != y) // Don't check the zero button itself
+                    if (x2 != x || y2 != y) // der angeklickte Button
                     {
                         if (((ButtonInfo)buttons[x2, y2].Tag).NumberOfAdjurningBombs == 0 && buttons[x2, y2].Enabled)
                         {
                             buttons[x2, y2].Enabled = false;
-                            buttons[x2, y2].Text = ((ButtonInfo)buttons[x2, y2].Tag).NumberOfAdjurningBombs.ToString(); // Or set text to indicate an empty cell
+                            buttons[x2, y2].Text = ((ButtonInfo)buttons[x2, y2].Tag).NumberOfAdjurningBombs.ToString(); 
                             RevealSurroundingZeros(x2, y2);
                         }
                     }

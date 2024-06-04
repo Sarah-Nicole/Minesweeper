@@ -49,7 +49,7 @@ namespace Minesweeper
         {
             int remainder = TrkbSize.Value % TrkbSize.TickFrequency;
             int newValue = TrkbSize.Value - remainder;
-            if (remainder > (TrkbSize.TickFrequency))
+            if (remainder > TrkbSize.TickFrequency)
             {
                 newValue += TrkbSize.TickFrequency;
             }
