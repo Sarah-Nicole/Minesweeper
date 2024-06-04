@@ -1,20 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace Minesweeper
 {
     public partial class FrmMinesweeper : Form
     {
         private Button[,] buttons = new Button[8, 8];
-        
+
         Panel disablePanel;
 
         private Timer timer;
@@ -25,7 +18,7 @@ namespace Minesweeper
         int lifeCount = 3;
 
         string winMessage = "You won!";
-        string loseMessage = "You lost! :(, Want to try again?"; 
+        string loseMessage = "You lost! :(, Want to try again?";
 
         public FrmMinesweeper()
         {
@@ -57,9 +50,9 @@ namespace Minesweeper
                         Location = new Point(newX, newY),
                         Size = new Size(buttonWidth, buttonHeight),
                         Name = x + ":" + y,
-                        Tag = 0,
+                        Tag = new ButtonInfo() { HasBomb = false },
                         TabStop = false,
-                    };   
+                    };
                     buttons[x, y].Click += new EventHandler(MyButtonHandler_Click);
                     Controls.Add(buttons[x, y]);
                 }
@@ -98,44 +91,49 @@ namespace Minesweeper
 
         #endregion
 
+
         private void PlaceBombs()
         {
             Random rnd = new Random();
 
             for (int i = 0; i < bombCount; i++)
             {
-                int x = rnd.Next(0, 7);
-                int y = rnd.Next(0, 7);
+                bool placedBomb = false;
 
-                // 1 = BOMB, 0 = leer
-                buttons[x, y].Tag = 1;
-                buttons[x, y].Text = "B";
+                while (!placedBomb)
+                {
+                    int x = rnd.Next(0, 8);
+                    int y = rnd.Next(0, 8);
+
+                    if (!((ButtonInfo)buttons[x, y].Tag).HasBomb)
+                    {
+                        buttons[x, y].Tag = new ButtonInfo() { HasBomb = true };
+                        buttons[x, y].Text = "B"; // noch entfernen für Produktion
+                        placedBomb = true;
+                    }
+                }
             }
         }
-       
+
         private bool CheckIfBomb(Button clickedButton)
         {
-            if (Convert.ToInt32(clickedButton.Tag) == 1)
-            {
-                return true;
-            }
-
-            return false;
+            return ((ButtonInfo)clickedButton.Tag).HasBomb;
         }
 
         private bool CheckIfWon()
         {
-            // check if from all the buttons that are disabled, there are the correct buttons with Tag 0
+            // Check if all non-bomb buttons are disabled
             int nonBombCount = buttons.GetLength(0) * buttons.GetLength(1) - bombCount;
-            int emptyFieldCount = -1; 
+            int emptyFieldCount = 0;
 
             for (int y = 0; y <= buttons.GetUpperBound(1); y++)
             {
                 for (int x = 0; x <= buttons.GetUpperBound(0); x++)
                 {
-                    if (Convert.ToInt32(buttons[x, y].Tag) == 0 && !buttons[x, y].Enabled)
+                    ButtonInfo info = (ButtonInfo)buttons[x, y].Tag;
+                    if (!info.HasBomb && !buttons[x, y].Enabled)
                     {
-                        emptyFieldCount++; 
+                        emptyFieldCount++;
                     }
                 }
             }
@@ -160,7 +158,8 @@ namespace Minesweeper
                 for (int x = 0; x <= buttons.GetUpperBound(0); x++)
                 {
                     buttons[x, y].Text = ""; // Clear button text, später noch raus nehmen
-                    buttons[x, y].Tag = 0;
+
+                    ((ButtonInfo)buttons[x, y].Tag).HasBomb = false;
                     buttons[x, y].Enabled = true;
                 }
             }
@@ -174,12 +173,33 @@ namespace Minesweeper
             CreateDisablePanel();
 
             // Panel darüber legen und dieses disablen. 
-            disablePanel.Visible = true; 
+            disablePanel.Visible = true;
             disablePanel.Enabled = false;
-           // disablePanel.BringToFront();
-
+            // disablePanel.BringToFront();
         }
 
+
+        private int CountAdjurningBombs(int clickedButtonX, int clickedButtonY)
+        {
+            int bombCount = 0;
+
+            // Durch die Buttons iterieren inkl. Edges
+            for (int y = Math.Max(clickedButtonY - 1, 0); y <= Math.Min(clickedButtonY + 1, buttons.GetUpperBound(1)); y++)
+            {
+                for (int x = Math.Max(clickedButtonX - 1, 0); x <= Math.Min(clickedButtonX + 1, buttons.GetUpperBound(0)); x++)
+                {
+                    // Den geklickten Button skipen
+                    if (x == clickedButtonX && y == clickedButtonY) continue;
+
+                    if (((ButtonInfo)buttons[x, y].Tag).HasBomb)
+                    {
+                        bombCount++;
+                    }
+                }
+            }
+
+            return bombCount;
+        }
 
         #region EventHandler
 
@@ -187,7 +207,7 @@ namespace Minesweeper
         {
             Button b = (Button)sender;
             // Im Name ist die Position gemerkt. Anzeigen raus löschen
-            b.Text = $"{b.Name} - {b.Tag}";
+            b.Text = $"{b.Name}";
             // In Tag definieren ob Bombe oder nicht.
 
             // Eventuell bessere Lösung (in Tag speichern als Flag (isClicked))
@@ -198,10 +218,24 @@ namespace Minesweeper
             {
                 // Sound einfügen 
                 lifeCount--;
+                TxtbLife.Text = lifeCount.ToString();
             }
-            TxtbLife.Text = lifeCount.ToString();
+            else
+            {
+                // Ev. CountAdjuringBombs gerade Wert zurück geben
+                string[] nameParts = b.Name.Split(':');
+                int clickedButtonX = Convert.ToInt32(nameParts[0]);
+                int clickedButtonY = Convert.ToInt32(nameParts[1]);
+                int adjoiningBombs = CountAdjurningBombs(clickedButtonX, clickedButtonY);
 
-            if(lifeCount == 0)
+                // Update ButtonInfo with adjoining bomb count
+                ((ButtonInfo)b.Tag).NumberOfAdjurningBombs = adjoiningBombs;
+                b.Text = adjoiningBombs.ToString();
+            }
+                     
+
+
+            if (lifeCount == 0)
             {
                 // Disabled alles: nochmals überarbeiten.
                 //  DisableAll();
@@ -215,7 +249,6 @@ namespace Minesweeper
                     StartNewGame();
                 }
                 else
-
                 {
                     // Programm schliessen / bzw dann zurück zur auswahl
                     FrmMinesweeper.ActiveForm.Close();
@@ -223,12 +256,11 @@ namespace Minesweeper
             }
 
             // muss noch überarbeitet werden:
-            
-                if (CheckIfWon())
-                {
-                    MessageBox.Show(winMessage, "Winner!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-                }
-           
+            if (CheckIfWon())
+            {
+                MessageBox.Show(winMessage, "Winner!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            }
+
         }
 
         private void BtnPlay_Click(object sender, EventArgs e)
@@ -240,6 +272,11 @@ namespace Minesweeper
 
         #endregion
 
-
+        public class ButtonInfo
+        {
+            public bool HasBomb { get; set; }
+            public int NumberOfAdjurningBombs { get; set; }
+            //public bool WasClicked { get; set; }
+        }
     }
 }
