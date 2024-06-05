@@ -20,7 +20,7 @@ namespace Minesweeper
         string winMessage = "Leichtes Spiel! Dein Talent und deine Spielintelligenz waren einfach unschlagbar! Du bist ein wahrer Meister! Möchtest du nochmals spielen?";
         string loseMessage = "Ha Verloren! Verlieren ist etwas für bildungsresistente Intelligenzallergiker! Möchtest du das Gegenteil beweisen?";
 
-        Image ImgBomb = Image.FromFile("C:\\Users\\sarah\\Documents\\ZBW\\Einstiegskurs 1. & 2. Semester 2023\\Programmieren\\C-Sharp\\Minesweeper\\images\\bomb.png");
+        Image ImgBomb = Image.FromFile("images/bomb.png");
 
         public FrmMinesweeperMain(GameConfig config)
         {
@@ -92,6 +92,18 @@ namespace Minesweeper
         private void SetLifeCount()
         {
             TxtbLife.Text = lifeCount.ToString();
+        }
+
+        private void SetBombLayout(Button b)
+        {
+            b.BackgroundImage = ImgBomb;
+            b.BackgroundImageLayout = ImageLayout.Zoom;
+        }
+
+        private void SetNumberOfAdjurningBombsLayout(Button b)
+        {
+            b.Text = ((ButtonInfo)b.Tag).NumberOfAdjurningBombs.ToString();
+            b.BackColor = Color.White;
         }
 
         #endregion
@@ -242,13 +254,12 @@ namespace Minesweeper
             {
                 lifeCount--;
                 SetLifeCount();
-                b.BackgroundImage = ImgBomb;
-                b.BackgroundImageLayout = ImageLayout.Zoom;
+                SetBombLayout(b);
+
             }
             else
             {
-                b.Text = ((ButtonInfo)b.Tag).NumberOfAdjurningBombs.ToString();
-                b.BackColor = Color.White;
+                SetNumberOfAdjurningBombsLayout(b);
 
                 if (((ButtonInfo)b.Tag).NumberOfAdjurningBombs == 0)
                 {

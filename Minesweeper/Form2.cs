@@ -14,7 +14,6 @@ namespace Minesweeper
             InitializeComponent();
             StartPosition = FormStartPosition.CenterScreen;
             config.BoardSize = TrkbSize.Value;
-
         }
 
         public void UpdateGameConfig(int boardSize)
