@@ -199,32 +199,24 @@ namespace Minesweeper
             return bombCount;
         }
 
-        // ev. hinfällig oder namen noch ändern
-        private void CountAdjurningZeros(Button b)
+        private void RevealSurroundingZeros(int clickedButtonX, int clickedButtonY)
         {
-            string[] nameParts = b.Name.Split(':');
-            int clickedButtonX = Convert.ToInt32(nameParts[0]);
-            int clickedButtonY = Convert.ToInt32(nameParts[1]);
-
-            RevealSurroundingZeros(clickedButtonX, clickedButtonY);
-            buttons[clickedButtonX, clickedButtonY].Enabled = false;
-            buttons[clickedButtonX, clickedButtonY].Text = ((ButtonInfo)buttons[clickedButtonX, clickedButtonY].Tag).NumberOfAdjurningBombs.ToString();
-        }
-
-        private void RevealSurroundingZeros(int x, int y)
-        {
-            for (int y2 = Math.Max(y - 1, 0); y2 <= Math.Min(y + 1, buttons.GetUpperBound(1)); y2++)
+            for (int y = Math.Max(clickedButtonY - 1, 0); y <= Math.Min(clickedButtonY + 1, buttons.GetUpperBound(1)); y++)
             {
-                for (int x2 = Math.Max(x - 1, 0); x2 <= Math.Min(x + 1, buttons.GetUpperBound(0)); x2++)
-                {
-                    if (x2 != x || y2 != y) // der angeklickte Button
+                for (int x = Math.Max(clickedButtonX - 1, 0); x <= Math.Min(clickedButtonX + 1, buttons.GetUpperBound(0)); x++)
+                {                   
+                    if (x != clickedButtonX || y != clickedButtonY) // der angeklickte Button
                     {
-                        if (((ButtonInfo)buttons[x2, y2].Tag).NumberOfAdjurningBombs == 0 && buttons[x2, y2].Enabled)
+                        if (!((ButtonInfo)buttons[x, y].Tag).HasBomb && buttons[x, y].Enabled)
                         {
-                            buttons[x2, y2].Enabled = false;
-                            buttons[x2, y2].Text = ((ButtonInfo)buttons[x2, y2].Tag).NumberOfAdjurningBombs.ToString(); 
-                            RevealSurroundingZeros(x2, y2);
-                        }
+                            buttons[x, y].Enabled = false;
+                            buttons[x, y].Text = ((ButtonInfo)buttons[x, y].Tag).NumberOfAdjurningBombs.ToString();
+
+                            if (((ButtonInfo)buttons[x, y].Tag).NumberOfAdjurningBombs == 0)
+                            { 
+                                RevealSurroundingZeros(x, y);
+                            }
+                        }  
                     }
                 }
             }
@@ -240,11 +232,9 @@ namespace Minesweeper
             // Im Name ist die Position gemerkt. Anzeigen raus löschen für Produktion
             b.Text = $"{b.Name}";
 
-            // Eventuell bessere Lösung (in Tag speichern als Flag (isClicked))
             b.Enabled = false;
 
-            bool isBomb = CheckIfBomb(b);
-            if (isBomb)
+            if (CheckIfBomb(b))
             {
                 // Sound einfügen 
                 lifeCount--;
@@ -256,7 +246,11 @@ namespace Minesweeper
 
                 if (((ButtonInfo)b.Tag).NumberOfAdjurningBombs == 0)
                 {
-                    CountAdjurningZeros(b);
+                    string[] nameParts = b.Name.Split(':');
+                    int clickedButtonX = Convert.ToInt32(nameParts[0]);
+                    int clickedButtonY = Convert.ToInt32(nameParts[1]);
+
+                    RevealSurroundingZeros(clickedButtonX, clickedButtonY);
                 }
             }
 

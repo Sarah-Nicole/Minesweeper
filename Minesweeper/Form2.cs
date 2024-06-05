@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
+using System.Reflection.Emit;
 using System.Windows.Forms;
 
 namespace Minesweeper
@@ -15,13 +17,35 @@ namespace Minesweeper
 
         }
 
-        private void RadbEasy_CheckedChanged(object sender, EventArgs e)
+        public void UpdateGameConfig(int boardSize)
         {
             if (RadbEasy.Checked)
             {
                 config.SelectedLevel = 0;
-                config.BombCount = 5;
+                config.BombCount = Convert.ToInt32((TrkbSize.Value * TrkbSize.Value) / 8);
                 config.LifeCount = 4;
+                config.BoardSize = TrkbSize.Value;
+            }
+            else if (RadbMedium.Checked) {
+                config.SelectedLevel = 1;
+                config.BombCount = Convert.ToInt32((TrkbSize.Value * TrkbSize.Value) / 5);
+                config.LifeCount = 3;
+                config.BoardSize = TrkbSize.Value;
+            }
+            else
+            {
+                config.SelectedLevel = 2;
+                config.BombCount = Convert.ToInt32((TrkbSize.Value * TrkbSize.Value) / 3);
+                config.LifeCount = 1;
+                config.BoardSize = TrkbSize.Value;
+            }
+        }
+
+        private void RadbEasy_CheckedChanged(object sender, EventArgs e)
+        {
+            if (RadbEasy.Checked)
+            {
+                UpdateGameConfig(TrkbSize.Value);
             }
         }
 
@@ -29,9 +53,7 @@ namespace Minesweeper
         {
             if (RadbMedium.Checked)
             {
-                config.SelectedLevel = 1;
-                config.BombCount = 10;
-                config.LifeCount = 3;
+                UpdateGameConfig(TrkbSize.Value);
             }
         }
 
@@ -39,9 +61,7 @@ namespace Minesweeper
         {
             if (RadbHard.Checked)
             {
-                config.SelectedLevel = 2;
-                config.BombCount = 15;
-                config.LifeCount = 1;
+                UpdateGameConfig(TrkbSize.Value);
             }
         }
 
@@ -59,7 +79,7 @@ namespace Minesweeper
             LblMax.Text = TrkbSize.Maximum.ToString();
             LblValue.Text = TrkbSize.Value.ToString();
 
-            config.BoardSize = TrkbSize.Value;
+            UpdateGameConfig(TrkbSize.Value);
         }
 
         private void BtnPlayStart_Click(object sender, EventArgs e)
