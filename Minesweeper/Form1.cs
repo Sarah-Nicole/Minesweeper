@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Minesweeper.Properties;
+using System;
 using System.Drawing;
+using System.Resources;
 using System.Windows.Forms;
 
 namespace Minesweeper
@@ -15,12 +17,15 @@ namespace Minesweeper
 
         private Button[,] buttons;
 
-        string winMessage = "You won! Want to try again?";
-        string loseMessage = "You lost! :( Want to try again?";
+        string winMessage = "Leichtes Spiel! Dein Talent und deine Spielintelligenz waren einfach unschlagbar! Du bist ein wahrer Meister! Möchtest du nochmals spielen?";
+        string loseMessage = "Ha Verloren! Verlieren ist etwas für bildungsresistente Intelligenzallergiker! Möchtest du das Gegenteil beweisen?";
+
+        Image ImgBomb = Image.FromFile("C:\\Users\\sarah\\Documents\\ZBW\\Einstiegskurs 1. & 2. Semester 2023\\Programmieren\\C-Sharp\\Minesweeper\\images\\bomb.png");
 
         public FrmMinesweeperMain(GameConfig config)
         {
             InitializeComponent();
+
             _config = config;
             lifeCount = _config.LifeCount;
             boardSize = _config.BoardSize;
@@ -58,6 +63,7 @@ namespace Minesweeper
                         Name = x + ":" + y,
                         Tag = new ButtonInfo() { HasBomb = false },
                         TabStop = false,
+                        Font = new Font("ROG Fonts", 7.874999F, FontStyle.Regular, GraphicsUnit.Point),
                     };
                     buttons[x, y].Click += new EventHandler(MyButtonHandler_Click);
                     Controls.Add(buttons[x, y]);
@@ -108,7 +114,6 @@ namespace Minesweeper
                     if (!((ButtonInfo)buttons[x, y].Tag).HasBomb)
                     {
                         buttons[x, y].Tag = new ButtonInfo() { HasBomb = true };
-                        buttons[x, y].Text = "B"; // noch entfernen für Produktion
                         placedBomb = true;
                     }
                 }
@@ -122,7 +127,6 @@ namespace Minesweeper
 
         private bool CheckIfWon()
         {
-            // Check if all non-bomb buttons are disabled
             int nonBombCount = buttons.GetLength(0) * buttons.GetLength(1) - _config.BombCount;
             int emptyFieldCount = 0;
 
@@ -156,14 +160,17 @@ namespace Minesweeper
             {
                 for (int x = 0; x <= buttons.GetUpperBound(0); x++)
                 {
-                    buttons[x, y].Text = ""; // Clear button text, später noch raus nehmen
-
+                    buttons[x, y].BackgroundImage = null;
+                    buttons[x, y].BackColor = Color.Goldenrod;
                     ((ButtonInfo)buttons[x, y].Tag).HasBomb = false;
+                    ((ButtonInfo)buttons[x, y].Tag).NumberOfAdjurningBombs = 0;
+                    buttons[x, y].Text = "";
                     buttons[x, y].Enabled = true;
                 }
             }
 
             PlaceBombs();
+            SetAdjurningBombs();
         }
 
         private void SetAdjurningBombs()
@@ -205,11 +212,12 @@ namespace Minesweeper
             {
                 for (int x = Math.Max(clickedButtonX - 1, 0); x <= Math.Min(clickedButtonX + 1, buttons.GetUpperBound(0)); x++)
                 {                   
-                    if (x != clickedButtonX || y != clickedButtonY) // der angeklickte Button
+                    if (x != clickedButtonX || y != clickedButtonY) // Nicht der angeklickte Button
                     {
                         if (!((ButtonInfo)buttons[x, y].Tag).HasBomb && buttons[x, y].Enabled)
                         {
                             buttons[x, y].Enabled = false;
+                            buttons[x, y].BackColor = Color.White;
                             buttons[x, y].Text = ((ButtonInfo)buttons[x, y].Tag).NumberOfAdjurningBombs.ToString();
 
                             if (((ButtonInfo)buttons[x, y].Tag).NumberOfAdjurningBombs == 0)
@@ -225,24 +233,22 @@ namespace Minesweeper
         #endregion
 
         #region EventHandler
-
         public void MyButtonHandler_Click(object sender, EventArgs e)
         {
             Button b = (Button)sender;
-            // Im Name ist die Position gemerkt. Anzeigen raus löschen für Produktion
-            b.Text = $"{b.Name}";
-
             b.Enabled = false;
 
             if (CheckIfBomb(b))
             {
-                // Sound einfügen 
                 lifeCount--;
                 SetLifeCount();
+                b.BackgroundImage = ImgBomb;
+                b.BackgroundImageLayout = ImageLayout.Zoom;
             }
             else
             {
                 b.Text = ((ButtonInfo)b.Tag).NumberOfAdjurningBombs.ToString();
+                b.BackColor = Color.White;
 
                 if (((ButtonInfo)b.Tag).NumberOfAdjurningBombs == 0)
                 {
@@ -259,7 +265,6 @@ namespace Minesweeper
                 timer.Stop();
 
                 var result = MessageBox.Show(loseMessage, "Looser!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-
                 if (result == DialogResult.Yes)
                 {
                     StartNewGame();
@@ -269,18 +274,20 @@ namespace Minesweeper
                     FrmMinesweeperMain.ActiveForm.Close();
                 }
             }
-
-            if (CheckIfWon())
+            else
             {
-                var result = MessageBox.Show(winMessage, "Winner!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                if (CheckIfWon())
+                {
+                    var result = MessageBox.Show(winMessage, "Winner!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
 
-                if (result == DialogResult.Yes)
-                {
-                    StartNewGame();
-                }
-                else
-                {
-                    FrmMinesweeperMain.ActiveForm.Close();
+                    if (result == DialogResult.Yes)
+                    {
+                        StartNewGame();
+                    }
+                    else
+                    {
+                        FrmMinesweeperMain.ActiveForm.Close();
+                    }
                 }
             }
         }
@@ -291,6 +298,5 @@ namespace Minesweeper
         }
 
         #endregion
-
     }
 }
