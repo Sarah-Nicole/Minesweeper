@@ -20,8 +20,6 @@ namespace Minesweeper
         string winMessage = "Leichtes Spiel! Dein Talent und deine Spielintelligenz waren einfach unschlagbar! Du bist ein wahrer Meister! Möchtest du nochmals spielen?";
         string loseMessage = "Ha Verloren! Verlieren ist etwas für bildungsresistente Intelligenzallergiker! Möchtest du das Gegenteil beweisen?";
 
-        Image ImgBomb = Image.FromFile("images/bomb.png");
-
         public FrmMinesweeperMain(GameConfig config)
         {
             InitializeComponent();
@@ -96,7 +94,7 @@ namespace Minesweeper
 
         private void SetBombLayout(Button b)
         {
-            b.BackgroundImage = ImgBomb;
+            b.BackgroundImage = Resources.bomb;
             b.BackgroundImageLayout = ImageLayout.Zoom;
         }
 

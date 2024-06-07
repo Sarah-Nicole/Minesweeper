@@ -177,7 +177,7 @@
             // 
             // BtnPlay
             // 
-            this.BtnPlay.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("BtnPlay.BackgroundImage")));
+            this.BtnPlay.BackgroundImage = global::Minesweeper.Properties.Resources.play2;
             this.BtnPlay.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.BtnPlay.Location = new System.Drawing.Point(130, 584);
             this.BtnPlay.Margin = new System.Windows.Forms.Padding(4);
